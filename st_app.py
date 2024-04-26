@@ -10,10 +10,19 @@ st.title("IMDB parents guide")
 
 @st.cache
 def update_df(df: pd.DataFrame) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        df (pd.DataFrame): _description_
+
+    Returns:
+        pd.DataFrame: _description_
+    """
     sex = st.session_state["sex"]
     fright = st.session_state["fright"]
     profanity = st.session_state["profanity"]
     alcohol = st.session_state["alcohol"]
+    violence = st.session_state["violence"]
     if sex != "all":
         df = df.query(f"sex == '{sex}'")
     if fright != "all":
@@ -22,6 +31,8 @@ def update_df(df: pd.DataFrame) -> pd.DataFrame:
         df = df.query(f"profanity == '{profanity}'")
     if alcohol != "all":
         df = df.query(f"alcohol == '{alcohol}'")
+    if violence != "all":
+        df = df.query(f"violence == '{violence}'")
     st.session_state["df"] = df
     st.session_state["fresh_data"] = False
 
