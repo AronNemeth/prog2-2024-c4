@@ -2,13 +2,20 @@ import streamlit as st
 import pandas as pd
 import queries
 
-# TODO title
 # TODO normális elrendezés a dropdownoknak
 st.set_page_config(page_title="IMDB parents guide", layout="wide")
 st.title("IMDB parents guide")
 
 
-@st.cache
+# TODO kicsit bugos a dynamic dropdown, mintha nem szelektálná a többi dropdown kategóriát, amikor beállítom a frighteninget (moderate fright, moderate prof -> no options to select)
+@st.cache_data
+def get_data():
+    df = queries.pivot_cat_severity()
+
+    return df
+
+
+# TODO lehet itt van a fent említett bug
 def update_df(df: pd.DataFrame) -> pd.DataFrame:
     """_summary_
 
@@ -37,7 +44,7 @@ def update_df(df: pd.DataFrame) -> pd.DataFrame:
     st.session_state["fresh_data"] = False
 
 
-df = queries.pivot_cat_severity()
+df = get_data()
 
 
 if "df" not in st.session_state:
@@ -102,3 +109,9 @@ with st.expander("Display", expanded=True):
         kwargs={"df": df},
         key="violence",
     )
+
+    # Csak azért van kiírva a df, hogy a dynamic dropdown működését lehessen látni
+    # st.write(df.astype("object"))
+
+if st.button("Query data"):
+    pass
