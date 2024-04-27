@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import queries
+import queries as q
 
 # TODO normális elrendezés a dropdownoknak
 st.set_page_config(page_title="IMDB parents guide", layout="wide")
@@ -8,9 +8,11 @@ st.title("IMDB parents guide")
 
 
 # TODO kicsit bugos a dynamic dropdown, mintha nem szelektálná a többi dropdown kategóriát, amikor beállítom a frighteninget (moderate fright, moderate prof -> no options to select)
+# TODO miért van None és NaN is a Fright opciók között
+# TODO biztos jó a pivot? -> több None value is fright-nál -> ennyi hiányzó nem volt a parents_guide táblában
 @st.cache_data
 def get_data():
-    df = queries.pivot_cat_severity()
+    df = q.pivot_cat_severity()
 
     return df
 
@@ -54,7 +56,7 @@ if "fresh_data" not in st.session_state:
 
 with st.expander("Display", expanded=True):
     if st.button("Refresh data"):
-        df = queries.pivot_cat_severity()
+        df = q.pivot_cat_severity()
         st.session_state["df"] = df
         st.session_state["fresh_data"] = True
 
@@ -110,8 +112,19 @@ with st.expander("Display", expanded=True):
         key="violence",
     )
 
-    # Csak azért van kiírva a df, hogy a dynamic dropdown működését lehessen látni
-    # st.write(df.astype("object"))
+    # Csak tesztelés miatt vannak itt kiírva dolgok
+    st.write("Selected value of 'sex':", sex)
+    st.write("Selected value of 'fright':", fright)
+    st.write("Selected value of 'profanity':", profanity)
+    st.write("Selected value of 'alcohol':", alcohol)
+    st.write("Selected value of 'violence':", violence)
+    st.write(df.astype("object"))
+
 
 if st.button("Query data"):
-    pass
+    # fv(sex, fright, profanity, alcohol, violence)
+    series = q.q_pg_series(
+        alcohol=alcohol, fright=fright, profanity=profanity, sex=sex, violence=violence
+    )
+
+    st.write(series.astype("object"))
