@@ -2,15 +2,12 @@ import pandas as pd
 from connect_db import conn_db
 
 
-# TODO ezt átírni, hogy csak unique-okat adjon vissza
-# VAGY legyen benne a series_id is -> nem kell még egy query fv -> és az alapján lehet query-zni
 def pivot_cat_severity() -> pd.DataFrame:
-    """Queries the entire parents_guides table to enable dynamic dropdowns
-       Performs pivot on the table, so that values in cat become columns
-       Cell values are values in level
+    """Enables dynamic dropdowns
+       Pivots the parents_guides table, categories in cat become columns
 
     Returns:
-        pd.DataFrame: Columns are unique values in cat and values are unique values in level
+        pd.DataFrame: pivoted parents_guide without duplicates
     """
 
     sql_query = """
@@ -95,31 +92,77 @@ def q_pg_series(alcohol, fright, profanity, sex, violence) -> pd.DataFrame:
         return "I can't get no satisfaction"
 
 
-def q_series(title: str):
-    """Queries for one TV series based on title form the series table in postgreSQL
+def q_series(series_ids: tuple):
+    """Queries for TV series based on series_ids
 
     Args:
-        title (str): title of the series
+        series_id (tuple): series_ids
 
     Returns:
         pd.DataFrame: a df with one row
     """
 
-    sql_query = """
-        SELECT * FROM series
-        WHERE title = %s;
+    # Only one str in a tuple is unpacked from it
+    if isinstance(series_ids, str):
+        sql_query = """
+            SELECT * FROM series
+            WHERE series_id = %s;
+        """
+
+        conn, cur = conn_db()
+        cur.execute(sql_query, (series_ids,))
+        row = cur.fetchone()
+        cur.close()
+        conn.close()
+
+        return pd.DataFrame([row])
+
+    else:
+        sql_query = """
+            SELECT * FROM series
+            WHERE series_id IN %s;
+        """
+
+        conn, cur = conn_db()
+        cur.execute(sql_query, (series_ids,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+
+        return pd.DataFrame(rows)
+
+
+def get_titles() -> dict:
+    """_summary_
+
+    Returns:
+        dict: keys: title, values: series_id
     """
 
     conn, cur = conn_db()
-    cur.execute(sql_query, (title,))
-    row = cur.fetchone()
+    cur.execute("SELECT title, series_id FROM series")
+    rows = cur.fetchall()
     cur.close()
     conn.close()
 
-    df = pd.DataFrame([row])
+    dict_ = {item["title"]: item["series_id"] for item in rows}
 
-    return df
+    return dict_
+
+
+def get_seasons_episodes(series_id: str) -> pd.DataFrame:
+
+    conn, cur = conn_db()
+    cur.execute(
+        "SELECT season, episode_title, episode_id FROM episodes WHERE series_id = %s",
+        (series_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return pd.DataFrame(rows)
 
 
 if __name__ == "__main__":
-    print(pivot_cat_severity())
+    print(get_seasons_episodes("tt0944947"))
