@@ -32,15 +32,15 @@ def update_df(df: pd.DataFrame) -> pd.DataFrame:
     profanity = st.session_state["profanity"]
     alcohol = st.session_state["alcohol"]
     violence = st.session_state["violence"]
-    if sex != "all":
+    if sex != "All":
         df = df.query(f"sex == '{sex}'")
-    if fright != "all":
+    if fright != "All":
         df = df.query(f"fright == '{fright}'")
-    if profanity != "all":
+    if profanity != "All":
         df = df.query(f"profanity == '{profanity}'")
-    if alcohol != "all":
+    if alcohol != "All":
         df = df.query(f"alcohol == '{alcohol}'")
-    if violence != "all":
+    if violence != "All":
         df = df.query(f"violence == '{violence}'")
     st.session_state["df"] = df
     st.session_state["fresh_data"] = False
@@ -69,12 +69,12 @@ with st.expander("Display", expanded=True):
     alcohol_options = df.alcohol.unique().tolist()
     violence_options = df.violence.unique().tolist()
 
-    if st.session_state.fresh_data:
-        fright_options.insert(0, "all")
-        profanity_options.insert(0, "all")
-        sex_options.insert(0, "all")
-        alcohol_options.insert(0, "all")
-        violence_options.insert(0, "all")
+    # if st.session_state.fresh_data:
+    fright_options.insert(0, "All")
+    profanity_options.insert(0, "All")
+    sex_options.insert(0, "All")
+    alcohol_options.insert(0, "All")
+    violence_options.insert(0, "All")
 
     sex = col1.selectbox(
         "Sex & Nudity",
@@ -113,16 +113,10 @@ with st.expander("Display", expanded=True):
     )
 
     # Csak tesztelés miatt vannak itt kiírva dolgok
-    st.write("Selected value of 'sex':", sex)
-    st.write("Selected value of 'fright':", fright)
-    st.write("Selected value of 'profanity':", profanity)
-    st.write("Selected value of 'alcohol':", alcohol)
-    st.write("Selected value of 'violence':", violence)
-    st.write(df.astype("object"))
+    # st.write(df.astype("object"))
 
 
 if st.button("Query data"):
-    # fv(sex, fright, profanity, alcohol, violence)
     series = q.q_pg_series(
         alcohol=alcohol, fright=fright, profanity=profanity, sex=sex, violence=violence
     )

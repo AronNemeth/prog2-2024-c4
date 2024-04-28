@@ -19,7 +19,8 @@ def q_series_titles() -> list:
     return [list(d.values())[0] for d in dicts]
 
 
-# TODO megcsinálni, hogy a None value nan-re legyen átírva
+# TODO ezt átírni, hogy csak unique-okat adjon vissza
+# VAGY legyen benne a series_id is -> nem kell még egy query fv -> és az alapján lehet query-zni
 def pivot_cat_severity() -> pd.DataFrame:
     """Queries the entire parents_guides table to enable dynamic dropdowns
        Performs pivot on the table, so that values in cat become columns
@@ -29,34 +30,31 @@ def pivot_cat_severity() -> pd.DataFrame:
         pd.DataFrame: Columns are unique values in cat and values are unique values in level
     """
 
+    sql_query = """
+        SELECT
+            series_id,
+            MAX(CASE WHEN cat = 'Alcohol, Drugs & Smoking' THEN level END) AS alcohol,
+            MAX(CASE WHEN cat = 'Frightening & Intense Scenes' THEN level END) AS fright,
+            MAX(CASE WHEN cat = 'Profanity' THEN level END) AS profanity,
+            MAX(CASE WHEN cat = 'Sex & Nudity' THEN level END) AS sex,
+            MAX(CASE WHEN cat = 'Violence & Gore' THEN level END) AS violence
+        FROM parents_guides
+        GROUP BY series_id;
+    """
+
     conn, cur = conn_db()
-    cur.execute("SELECT * FROM parents_guides")
+    cur.execute(sql_query)
     rows = cur.fetchall()
     cur.close()
     conn.close()
 
     df = pd.DataFrame(rows)
 
-    pivot_df = df.pivot(index="series_id", columns="cat", values="level")
-    pivot_df.reset_index(inplace=True)
-    pivot_df = pivot_df.rename(
-        columns={
-            "Alcohol, Drugs & Smoking": "alcohol",
-            "Frightening & Intense Scenes": "fright",
-            "Profanity": "profanity",
-            "Sex & Nudity": "sex",
-            "Violence & Gore": "violence",
-        }
-    )
-
-    return pivot_df.iloc[:, 1:]
+    return df
 
 
 # Zseni ötlet -> ennek az outputját el lehet menteni s3-ban egy külön fájlként -> ha van már ilyen, nem kell még egyszer megcsinálni a query-t?
-
-
 # TODO sqllel megoldani, hogy csak random visszadjon egyet
-# TODO kaphat dropdownból olyat, hogy "all"
 def q_pg_series(alcohol, fright, profanity, sex, violence) -> pd.DataFrame:
     """Joins the series and the parents_guides tables
        The categories from the paretns_guides are added as cols to series
@@ -91,13 +89,22 @@ def q_pg_series(alcohol, fright, profanity, sex, violence) -> pd.DataFrame:
 
     df = pd.merge(series, parents_guides, on="series_id", how="left")
 
-    filtered_df = df[
-        (df["Alcohol, Drugs & Smoking"] == alcohol)
-        & (df["Frightening & Intense Scenes"] == fright)
-        & (df["Profanity"] == profanity)
-        & (df["Sex & Nudity"] == sex)
-        & (df["Violence & Gore"] == violence)
-    ]
+    # Add to filters if param is not "All"
+    filters = {}
+    if alcohol != "All":
+        filters["Alcohol, Drugs & Smoking"] = alcohol
+    if fright != "All":
+        filters["Frightening & Intense Scenes"] = fright
+    if profanity != "All":
+        filters["Profanity"] = profanity
+    if sex != "All":
+        filters["Sex & Nudity"] = sex
+    if violence != "All":
+        filters["Violence & Gore"] = violence
+
+    filtered_df = df
+    for col, val in filters.items():
+        filtered_df = filtered_df[filtered_df[col] == val]
 
     if len(filtered_df) > 0:
         return filtered_df.sample(n=1)
@@ -132,12 +139,4 @@ def q_series(title: str):
 
 
 if __name__ == "__main__":
-    print(
-        q_pg_series(
-            alcohol="Moderate",
-            fright="Severe",
-            profanity="Severe",
-            sex="Severe",
-            violence="Severe",
-        )
-    )
+    print(pivot_cat_severity())
