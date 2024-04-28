@@ -2,23 +2,6 @@ import pandas as pd
 from connect_db import conn_db
 
 
-# Ez nem kell valszeg
-def q_series_titles() -> list:
-    """Queries the series table for every title
-
-    Returns:
-        list: series titles
-    """
-
-    conn, cur = conn_db()
-    cur.execute("SELECT title FROM series")
-    dicts = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    return [list(d.values())[0] for d in dicts]
-
-
 # TODO ezt átírni, hogy csak unique-okat adjon vissza
 # VAGY legyen benne a series_id is -> nem kell még egy query fv -> és az alapján lehet query-zni
 def pivot_cat_severity() -> pd.DataFrame:

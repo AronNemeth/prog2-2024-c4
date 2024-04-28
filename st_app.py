@@ -112,7 +112,6 @@ with st.expander("Display", expanded=True):
         key="violence",
     )
 
-    # Csak tesztelés miatt vannak itt kiírva dolgok
     # st.write(df.astype("object"))
 
 
