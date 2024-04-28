@@ -99,7 +99,7 @@ def q_series(series_ids: tuple):
         series_id (tuple): series_ids
 
     Returns:
-        pd.DataFrame: a df with one row
+        pd.DataFrame: rows are series
     """
 
     # Only one str in a tuple is unpacked from it
@@ -145,9 +145,7 @@ def get_titles() -> dict:
     cur.close()
     conn.close()
 
-    dict_ = {item["title"]: item["series_id"] for item in rows}
-
-    return dict_
+    return {item["title"]: item["series_id"] for item in rows}
 
 
 def get_seasons_episodes(series_id: str) -> pd.DataFrame:
@@ -164,5 +162,16 @@ def get_seasons_episodes(series_id: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def get_keywords(ep_id: str):
+
+    conn, cur = conn_db()
+    cur.execute("SELECT kw FROM episode_kws WHERE episode_id = %s", (ep_id,))
+    kws = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    return [dict_["kw"] for dict_ in kws]
+
+
 if __name__ == "__main__":
-    print(get_seasons_episodes("tt0944947"))
+    print(get_keywords("tt1668746"))

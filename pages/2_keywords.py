@@ -8,29 +8,49 @@ st.title("Check keywords")
 
 
 titles_dict = q.get_titles()
-seasons = ["Please select a series first"]
-episodes = ["Please select a season first"]
-
-seasons_episodes = st.session_state.get(seasons_episodes=None)
+# st.session_state["seasons"] = ["Please select a series first"]
+# episodes = ["Please select a season first"]
 
 with st.expander("Display", expanded=True):
 
-    # TODO on_change callbackkel meg lehet csinálni
     ser_choice = st.selectbox("Please select a series", options=titles_dict.keys())
 
-    if st.button("Query seasons"):
-        seasons_episodes = q.get_seasons_episodes(titles_dict[ser_choice])
-        seasons = seasons_episodes["season"].unique()
-        st.write(seasons_episodes.astype("object"))
+    # Update session state variables
+    st.session_state["seas_eps"] = q.get_seasons_episodes(titles_dict[ser_choice])
+    st.session_state["seasons"] = st.session_state["seas_eps"]["season"].unique()
 
-    sea_choice = st.selectbox("Please select a season", options=seasons)
+    sea_choice = st.selectbox(
+        "Please select a season", options=st.session_state["seasons"]
+    )
 
-    if st.button("Query episodes"):
-        episodes = seasons_episodes["episode_title"]
-        st.write(episodes.astype("object"))
+    # Update session state variables
+    st.session_state["ep_titles"] = st.session_state["seas_eps"]["episode_title"]
 
-    st.selectbox("Please select an epidose", options=episodes)
+    ep_choice = st.selectbox(
+        "Please select an epidose", options=st.session_state["ep_titles"]
+    )
 
 
 if st.button("Display keywords"):
-    pass
+    ep_id = (
+        st.session_state["seas_eps"]
+        .loc[st.session_state["seas_eps"]["episode_title"] == ep_choice, "episode_id"]
+        .iloc[0]
+    )
+    ep_id
+    kws = q.get_keywords(ep_id)
+
+    # TODO itt még lehet szépíteni
+    # st.text_area("Keywords:", value=kws)
+    num_columns = 3
+
+    # Calculate the number of rows required
+    num_rows = -(-len(kws) // num_columns)  # Ceiling division to get the next integer
+
+    # Create a list to store the strings for each column
+    columns = [kws[i * num_rows : (i + 1) * num_rows] for i in range(num_columns)]
+
+    # Display the strings in multiple columns
+    st.write("Contents of the long list:")
+    for row in zip(*columns):
+        st.write(row)

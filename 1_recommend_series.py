@@ -115,12 +115,15 @@ with st.expander("Display", expanded=True):
     st.write(df.astype("object"))
 
 
-if st.button("Query data"):
-    # st.write(df.sample(n=1).astype("object"))
+if st.button("Show charts"):
 
-    # st.write(tuple(df.iloc[:, 0]))
-    rec_series = q.q_series(tuple(df.iloc[:, 0]))
-    st.write(rec_series.astype("object"))
+    n_series = len(df)
 
-    chart = v.create_plot(tuple(df.iloc[:, 0]))
-    st.write(chart)
+    if n_series == 1:
+        pass  # TODO a sima chartot még megírni
+    elif n_series > 1 and n_series < 6:
+        bar1, bar2 = v.bar_charts(tuple(df.iloc[:, 0]))
+        st.write(bar1, bar2)
+    else:
+        scatter = v.scatter_plot(tuple(df.iloc[:, 0]))
+        st.write(scatter)
