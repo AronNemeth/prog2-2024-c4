@@ -6,7 +6,6 @@ import visualization as v
 
 st.set_page_config(page_title="IMDB parents guide", layout="wide")
 st.title("TV series recommendation")
-"st.session_state object:", st.session_state
 
 
 @st.cache_data
@@ -108,8 +107,6 @@ with st.expander("Display", expanded=True):
         kwargs={"df": df},
         key="violence",
     )
-
-    st.write(df.astype("object"))
 
 
 if st.button("Show charts"):
