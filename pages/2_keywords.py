@@ -4,12 +4,11 @@ import queries as q
 
 st.set_page_config(page_title="IMDB parents guide", layout="wide")
 st.title("Check keywords")
-"st.session_state object:", st.session_state
+# "st.session_state object:", st.session_state
 
 
 titles_dict = q.get_titles()
-# st.session_state["seasons"] = ["Please select a series first"]
-# episodes = ["Please select a season first"]
+
 
 with st.expander("Display", expanded=True):
 
@@ -37,20 +36,16 @@ if st.button("Display keywords"):
         .loc[st.session_state["seas_eps"]["episode_title"] == ep_choice, "episode_id"]
         .iloc[0]
     )
-    ep_id
+
     kws = q.get_keywords(ep_id)
 
     # TODO itt még lehet szépíteni
-    # st.text_area("Keywords:", value=kws)
-    num_columns = 3
+    num_columns = 4
 
-    # Calculate the number of rows required
-    num_rows = -(-len(kws) // num_columns)  # Ceiling division to get the next integer
+    num_rows = -(-len(kws) // num_columns)
 
-    # Create a list to store the strings for each column
     columns = [kws[i * num_rows : (i + 1) * num_rows] for i in range(num_columns)]
 
-    # Display the strings in multiple columns
     st.write("Contents of the long list:")
     for row in zip(*columns):
         st.write(row)

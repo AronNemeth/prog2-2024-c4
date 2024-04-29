@@ -1,5 +1,5 @@
 import pandas as pd
-from connect_db import conn_db
+from connect_db import conn_rds_db
 
 
 def pivot_cat_severity() -> pd.DataFrame:
@@ -22,7 +22,7 @@ def pivot_cat_severity() -> pd.DataFrame:
         GROUP BY series_id;
     """
 
-    conn, cur = conn_db()
+    conn, cur = conn_rds_db()
     cur.execute(sql_query)
     rows = cur.fetchall()
     cur.close()
@@ -33,8 +33,6 @@ def pivot_cat_severity() -> pd.DataFrame:
     return df
 
 
-# Zseni ötlet -> ennek az outputját el lehet menteni s3-ban egy külön fájlként -> ha van már ilyen, nem kell még egyszer megcsinálni a query-t?
-# TODO sqllel megoldani, hogy csak random visszadjon egyet
 def q_pg_series(alcohol, fright, profanity, sex, violence) -> pd.DataFrame:
     """Joins the series and the parents_guides tables
        The categories from the paretns_guides are added as cols to series
@@ -49,10 +47,8 @@ def q_pg_series(alcohol, fright, profanity, sex, violence) -> pd.DataFrame:
     Returns:
         pd.DataFrame: one TV series with the categories from parents_guides joined as columns
     """
-    # pyspark: vajon gyorsabb ha sqllel csak lekérem a táblákat és a joint és szűrést pysparkkal csinálom?
-    # Simán %%timeittel lemérni
 
-    conn, cur = conn_db()
+    conn, cur = conn_rds_db()
     cur.execute("SELECT * FROM parents_guides;")
     pg = cur.fetchall()
     cur.execute("SELECT * FROM series;")
@@ -86,10 +82,7 @@ def q_pg_series(alcohol, fright, profanity, sex, violence) -> pd.DataFrame:
     for col, val in filters.items():
         filtered_df = filtered_df[filtered_df[col] == val]
 
-    if len(filtered_df) > 0:
-        return filtered_df.sample(n=1)
-    else:  # TODO Ezt majd ki lehet venni, ha megbízható a dynamic dropdown
-        return "I can't get no satisfaction"
+    return filtered_df.sample(n=1)
 
 
 def q_series(series_ids: tuple):
@@ -109,7 +102,7 @@ def q_series(series_ids: tuple):
             WHERE series_id = %s;
         """
 
-        conn, cur = conn_db()
+        conn, cur = conn_rds_db()
         cur.execute(sql_query, (series_ids,))
         row = cur.fetchone()
         cur.close()
@@ -123,7 +116,7 @@ def q_series(series_ids: tuple):
             WHERE series_id IN %s;
         """
 
-        conn, cur = conn_db()
+        conn, cur = conn_rds_db()
         cur.execute(sql_query, (series_ids,))
         rows = cur.fetchall()
         cur.close()
@@ -139,7 +132,7 @@ def get_titles() -> dict:
         dict: keys: title, values: series_id
     """
 
-    conn, cur = conn_db()
+    conn, cur = conn_rds_db()
     cur.execute("SELECT title, series_id FROM series")
     rows = cur.fetchall()
     cur.close()
@@ -150,7 +143,7 @@ def get_titles() -> dict:
 
 def get_seasons_episodes(series_id: str) -> pd.DataFrame:
 
-    conn, cur = conn_db()
+    conn, cur = conn_rds_db()
     cur.execute(
         "SELECT season, episode_title, episode_id FROM episodes WHERE series_id = %s",
         (series_id,),
@@ -164,7 +157,7 @@ def get_seasons_episodes(series_id: str) -> pd.DataFrame:
 
 def get_keywords(ep_id: str):
 
-    conn, cur = conn_db()
+    conn, cur = conn_rds_db()
     cur.execute("SELECT kw FROM episode_kws WHERE episode_id = %s", (ep_id,))
     kws = cur.fetchall()
     cur.close()

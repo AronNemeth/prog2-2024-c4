@@ -57,9 +57,3 @@ def scatter_plot(series_ids: tuple):
     )
 
     return chart
-
-
-if __name__ == "__main__":
-    # chart = create_plot(tuple("tt0944947"))
-    # chart.show()
-    pass

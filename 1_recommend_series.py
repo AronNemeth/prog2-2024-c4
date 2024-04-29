@@ -3,14 +3,12 @@ import pandas as pd
 import queries as q
 import visualization as v
 
-# TODO normális elrendezés a dropdownoknak
+
 st.set_page_config(page_title="IMDB parents guide", layout="wide")
 st.title("TV series recommendation")
 "st.session_state object:", st.session_state
 
 
-# TODO kicsit bugos a dynamic dropdown, mintha nem szelektálná a többi dropdown kategóriát, amikor beállítom a frighteninget (moderate fright, moderate prof -> no options to select)
-# TODO miért van None és NaN is a Fright opciók között
 @st.cache_data
 def get_data():
     df = q.pivot_cat_severity()
@@ -18,9 +16,8 @@ def get_data():
     return df
 
 
-# TODO lehet itt van a fent említett bug
 def update_df(df: pd.DataFrame) -> pd.DataFrame:
-    """_summary_
+    """Updates session state variables so the in the dropdowns only the available levels can be selected
 
     Args:
         df (pd.DataFrame): _description_
@@ -120,7 +117,8 @@ if st.button("Show charts"):
     n_series = len(df)
 
     if n_series == 1:
-        pass  # TODO a sima chartot még megírni
+        # TODO a sima chartot még megírni
+        st.write(q.q_series(tuple(df.iloc[:, 0])))
     elif n_series > 1 and n_series < 6:
         bar1, bar2 = v.bar_charts(tuple(df.iloc[:, 0]))
         st.write(bar1, bar2)
