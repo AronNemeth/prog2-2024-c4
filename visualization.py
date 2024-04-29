@@ -1,4 +1,3 @@
-import pandas as pd
 import altair as alt
 import queries as q
 
